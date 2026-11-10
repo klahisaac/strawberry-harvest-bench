@@ -1,0 +1,92 @@
+{
+  "tier": "smoke",
+  "detector": "colour",
+  "policy": "baseline",
+  "totals": {
+    "scenarios": 6,
+    "ripe_total": 28,
+    "picked_ripe": 19,
+    "success_rate": 0.6786,
+    "catch_rate": 0.75,
+    "damage_events": 15,
+    "false_picks": 0,
+    "unreachable": 7,
+    "attempts": 30,
+    "spilled": 2,
+    "bruised": 13
+  },
+  "rows": [
+    {
+      "id": "S0001",
+      "ripe_total": 5,
+      "picked_ripe": 3,
+      "damage_events": 1,
+      "false_picks": 0,
+      "unreachable": 1,
+      "attempts": 5,
+      "spilled": 1,
+      "bruised": 1,
+      "caught_ripe": 4
+    },
+    {
+      "id": "S0002",
+      "ripe_total": 6,
+      "picked_ripe": 4,
+      "damage_events": 2,
+      "false_picks": 0,
+      "unreachable": 2,
+      "attempts": 6,
+      "spilled": 0,
+      "bruised": 2,
+      "caught_ripe": 4
+    },
+    {
+      "id": "S0003",
+      "ripe_total": 4,
+      "picked_ripe": 2,
+      "damage_events": 3,
+      "false_picks": 0,
+      "unreachable": 0,
+      "attempts": 4,
+      "spilled": 1,
+      "bruised": 2,
+      "caught_ripe": 3
+    },
+    {
+      "id": "S0004",
+      "ripe_total": 5,
+      "picked_ripe": 3,
+      "damage_events": 1,
+      "false_picks": 0,
+      "unreachable": 2,
+      "attempts": 5,
+      "spilled": 0,
+      "bruised": 1,
+      "caught_ripe": 3
+    },
+    {
+      "id": "S0005",
+      "ripe_total": 4,
+      "picked_ripe": 3,
+      "damage_events": 4,
+      "false_picks": 0,
+      "unreachable": 2,
+      "attempts": 6,
+      "spilled": 0,
+      "bruised": 3,
+      "caught_ripe": 3
+    },
+    {
+      "id": "S0006",
+      "ripe_total": 4,
+      "picked_ripe": 4,
+      "damage_events": 4,
+      "false_picks": 0,
+      "unreachable": 0,
+      "attempts": 4,
+      "spilled": 0,
+      "bruised": 4,
+      "caught_ripe": 4
+    }
+  ]
+}

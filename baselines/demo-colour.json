@@ -1,0 +1,47 @@
+{
+  "tier": "demo",
+  "detector": "colour",
+  "policy": "baseline",
+  "totals": {
+    "scenarios": 2,
+    "ripe_total": 11,
+    "picked_ripe": 9,
+    "success_rate": 0.8182,
+    "catch_rate": 1.0,
+    "pick_damage": 0,
+    "damage_events": 7,
+    "false_picks": 0,
+    "unreachable": 0,
+    "attempts": 11,
+    "spilled": 2,
+    "bruised": 7
+  },
+  "rows": [
+    {
+      "id": "S0010",
+      "ripe_total": 5,
+      "picked_ripe": 4,
+      "damage_events": 4,
+      "false_picks": 0,
+      "unreachable": 0,
+      "attempts": 5,
+      "spilled": 1,
+      "bruised": 4,
+      "caught_ripe": 5,
+      "pick_damage": 0
+    },
+    {
+      "id": "S0025",
+      "ripe_total": 6,
+      "picked_ripe": 5,
+      "damage_events": 3,
+      "false_picks": 0,
+      "unreachable": 0,
+      "attempts": 6,
+      "spilled": 1,
+      "bruised": 3,
+      "caught_ripe": 6,
+      "pick_damage": 0
+    }
+  ]
+}

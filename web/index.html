@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Failure to Fix</title>
+<meta name="description" content="A recorded demo of real operations. A strawberry-harvesting robot fails in the field. Its log and a photo become a physics simulation, an AI agent fixes the code against it, the fix is smoke-tested, and a pull request goes out for review.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Harvest Bench · recorded demo of real operations</p>
+    <h1>From a field failure<br>to a reviewed fix</h1>
+    <p class="lede">A harvesting robot reached for a ripe strawberry and tore the stem of the unripe
+      one hanging in front of it. This page follows that one failure the whole way: found in the
+      robot's logs, rebuilt as a physics simulation from a single photo, reproduced with the code as
+      it was, fixed by an AI agent working against the simulation, smoke-tested, and sent for review.
+      Every step below was really run — the simulator, the agent, the tests — and recorded.</p>
+    <ol class="flow" aria-label="The steps">
+      <li><a href="#step1">Field logs</a></li><li><a href="#step2">Photo → simulation</a></li>
+      <li><a href="#step3">Reproduce</a></li><li><a href="#step4">AI fix</a></li>
+      <li><a href="#step5">Smoke test</a></li><li><a href="#step6">Pull request</a></li>
+    </ol>
+    <div class="stack" id="stack"></div>
+  </div>
+</header>
+
+<main>
+
+  <section class="step" id="step1">
+    <header class="step-head">
+      <span class="step-num">1</span>
+      <div><h2>The field logs</h2>
+        <p>One shift of harvester-01 in gutter row G3. Every attempt writes a line. Nine are
+          ordinary; one is not, and it is selected below.</p></div>
+    </header>
+    <div class="card flush"><table class="log" id="logTable"></table></div>
+    <div class="incident">
+      <div class="incident-text">
+        <p class="label">Incident · selected</p>
+        <h3 id="incTitle"></h3>
+        <p id="incWhy" class="why"></p>
+        <div class="timeline" id="incEvents"></div>
+      </div>
+      <figure class="photo">
+        <img src="demo/field-photo.png" alt="Field photo: a ripe red strawberry with an unripe pale one hanging in front of it">
+        <figcaption>Photo attached to the incident: the ripe berry it went for, with an unripe
+          berry hanging in front, covering its top — where the stem is cut.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="step" id="step2">
+    <header class="step-head">
+      <span class="step-num">2</span>
+      <div><h2>The photo, as a simulation</h2>
+        <p>The photo is measured and turned into a scene a physics engine can run.</p></div>
+    </header>
+    <div class="triptych">
+      <figure class="frame">
+        <div class="overlay-wrap">
+          <img src="demo/field-photo.png" alt="The field photo">
+          <svg id="blobSvg" class="overlay" viewBox="0 0 95 107"></svg>
+        </div>
+        <figcaption>Field photo, berries found by colour</figcaption>
+      </figure>
+      <div class="arrow" aria-hidden="true">→</div>
+      <figure class="frame">
+        <img src="demo/sim-photo.png" alt="The same cluster, rendered in the simulator">
+        <figcaption>The same cluster in the simulator, rendered from where the photo was taken</figcaption>
+      </figure>
+    </div>
+    <div class="card flush"><table class="data" id="berryTable"></table></div>
+    <div class="how" id="howSim"></div>
+  </section>
+
+  <section class="step" id="step3">
+    <header class="step-head">
+      <span class="step-num">3</span>
+      <div><h2>The failure, reproduced with the current code</h2>
+        <p>The robot works the simulated cluster exactly as it works any gutter, and fails the way
+          it failed in the field.</p></div>
+    </header>
+    <div class="result">
+      <video src="demo/before/attempt.mp4" controls muted playsinline loop autoplay></video>
+      <div class="verdict-panel" id="beforeVerdict"></div>
+    </div>
+    <div class="how" id="howBefore"></div>
+  </section>
+
+  <section class="step" id="step4">
+    <header class="step-head">
+      <span class="step-num">4</span>
+      <div><h2>The fix, written by an AI agent</h2>
+        <p>An AI agent was given the field report, a copy of the robot's code, and one command that
+          runs this simulation and the smoke tests. Below: what it changed, why, and the simulation
+          before and after.</p></div>
+    </header>
+    <div class="agent-card" id="agentCard"></div>
+    <h3 class="subhead">Why it changed the code — the agent's explanation</h3>
+    <div class="explain" id="explain"></div>
+    <h3 class="subhead">What it changed</h3>
+    <div id="diff"></div>
+    <details class="transcript"><summary>What the agent said while it worked</summary><div id="sayings"></div></details>
+    <h3 class="subhead">The simulation, before and after</h3>
+    <div class="compare">
+      <figure><figcaption>Before — current code</figcaption>
+        <video src="demo/before/attempt.mp4" controls muted playsinline loop autoplay></video>
+        <div class="mini" id="cmpBefore"></div></figure>
+      <figure><figcaption>After — the agent's fix</figcaption>
+        <video src="demo/after/attempt.mp4" controls muted playsinline loop autoplay></video>
+        <div class="mini" id="cmpAfter"></div></figure>
+    </div>
+    <div class="how" id="howCompare"></div>
+  </section>
+
+  <section class="step" id="step5">
+    <header class="step-head">
+      <span class="step-num">5</span>
+      <div><h2>Smoke test</h2>
+        <p>A fix for one awkward cluster must not break ordinary picking.</p></div>
+    </header>
+    <div class="smoke" id="smoke"></div>
+  </section>
+
+  <section class="step" id="step6">
+    <header class="step-head">
+      <span class="step-num">6</span>
+      <div><h2>Pull request, sent for review</h2>
+        <p>The change goes out as a pull request, and a reviewer is asked to look at it.</p></div>
+    </header>
+    <div class="pr" id="pr"></div>
+  </section>
+
+</main>
+
+<footer class="foot" id="foot"></footer>
+
+<script src="demo/data.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>
