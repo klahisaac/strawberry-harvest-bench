@@ -378,9 +378,18 @@ is what will say whether it helped.
 
 ## The demo page
 
+**Live at https://harvest.isaacon.dev** (Cloudflare Pages).
+
 ```bash
 uv run harvest demo-bake --agent              # run everything, the AI agent included
 python3 -m http.server 8848 --directory web   # then open http://127.0.0.1:8848/
+```
+
+To publish a new bake, upload `web/` again. The Pages project uses direct
+upload rather than the GitHub integration, so a push alone does not redeploy:
+
+```bash
+CLOUDFLARE_API_TOKEN=... uv run --no-project --with blake3 python scripts/deploy_pages.py
 ```
 
 A recorded demo of real operations: one field failure, from report to pull
