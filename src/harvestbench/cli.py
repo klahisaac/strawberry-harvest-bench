@@ -1,4 +1,4 @@
-"""Command line: `harvest run` for one session, `harvest scene` to dump MJCF."""
+"""Command line: `harvest <command>`. Run `harvest -h` for the commands."""
 
 import argparse
 import json
@@ -11,40 +11,71 @@ from .suite import TIERS, SuiteResult, check_sensor_tracks_camera, compare, run_
 
 
 def main(argv=None) -> None:
-    parser = argparse.ArgumentParser(prog="harvest")
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    parser = argparse.ArgumentParser(
+        prog="harvest",
+        description="Simulation-first bench for a strawberry-harvesting robot.",
+    )
+    sub = parser.add_subparsers(dest="cmd", required=True, metavar="command",
+                                help="what to do; `harvest <command> -h` lists its options")
+    detectors = sorted(DETECTORS)
+    detector_help = ("how the survey camera's frame is read: `colour` is the hand-set colour "
+                     "threshold, `learned` the trained network (needs `uv sync --group ml`)")
 
     run = sub.add_parser("run", help="run scenarios and score them")
-    run.add_argument("--seed", type=int, default=0)
-    run.add_argument("--scenarios", type=int, default=1)
-    run.add_argument("--berries", type=int, default=6)
-    run.add_argument("--policy", choices=sorted(POLICIES), default="baseline")
-    run.add_argument("--detector", choices=sorted(DETECTORS), default=None,
-                     help="read the camera instead of the simulator's ground truth")
-    run.add_argument("--out", type=Path, default=None, help="write artifacts here")
+    run.add_argument("--seed", type=int, default=0,
+                     help="seed of the first scenario; scenario i uses seed + i (default: 0)")
+    run.add_argument("--scenarios", type=int, default=1,
+                     help="how many scenarios to run, one gutter each (default: 1)")
+    run.add_argument("--berries", type=int, default=6,
+                     help="berries hanging on each gutter (default: 6)")
+    run.add_argument("--policy", choices=sorted(POLICIES), default="baseline",
+                     help="which berries to go for, and in what order (default: baseline)")
+    run.add_argument("--detector", choices=detectors, default=None,
+                     help=detector_help + "; left out, the fitted sensor model stands in for "
+                          "the camera")
+    run.add_argument("--out", type=Path, default=None,
+                     help="directory for telemetry, the survey frame, the scene and metrics; "
+                          "left out, nothing is written")
 
     scene = sub.add_parser("scene", help="print the MJCF for one scenario")
-    scene.add_argument("--seed", type=int, default=0)
-    scene.add_argument("--berries", type=int, default=6)
+    scene.add_argument("--seed", type=int, default=0,
+                       help="seed of the scenario to build (default: 0)")
+    scene.add_argument("--berries", type=int, default=6,
+                       help="berries hanging on the gutter (default: 6)")
 
     suite = sub.add_parser("suite", help="run a tier of scenarios in parallel")
-    suite.add_argument("--tier", choices=sorted(TIERS), default="full")
-    suite.add_argument("--seed", type=int, default=1)
-    suite.add_argument("--berries", type=int, default=6)
-    suite.add_argument("--detector", choices=sorted(DETECTORS), default="colour")
+    suite.add_argument("--tier", choices=sorted(TIERS), default="full",
+                       help="which set of scenarios: smoke is 6, full is 40, demo is the two "
+                            "pinned picking scenarios (default: full)")
+    suite.add_argument("--seed", type=int, default=1,
+                       help="seed of the tier's first scenario, and of the sensor noise "
+                            "(default: 1, which the baselines were recorded with)")
+    suite.add_argument("--berries", type=int, default=6,
+                       help="berries hanging on each gutter (default: 6)")
+    suite.add_argument("--detector", choices=detectors, default="colour",
+                       help=detector_help + " (default: colour)")
     suite.add_argument("--no-detector", dest="detector", action="store_const", const=None,
                        help="use the fitted sensor model instead of the camera")
-    suite.add_argument("--workers", type=int, default=None)
-    suite.add_argument("--out", type=Path, default=None)
+    suite.add_argument("--workers", type=int, default=None,
+                       help="scenarios to run at once (default: half the CPU cores)")
+    suite.add_argument("--out", type=Path, default=None,
+                       help="write the tier's result to this JSON file")
 
     gate = sub.add_parser("gate", help="run a tier and diff it against the baseline")
-    gate.add_argument("--tier", choices=sorted(TIERS), default="smoke")
-    gate.add_argument("--seed", type=int, default=1)
-    gate.add_argument("--detector", choices=sorted(DETECTORS), default="colour")
-    gate.add_argument("--no-detector", dest="detector", action="store_const", const=None)
-    gate.add_argument("--workers", type=int, default=None)
+    gate.add_argument("--tier", choices=sorted(TIERS), default="smoke",
+                      help="which set of scenarios to run and judge (default: smoke)")
+    gate.add_argument("--seed", type=int, default=1,
+                      help="seed of the tier's first scenario, and of the sensor noise "
+                           "(default: 1, which the baselines were recorded with)")
+    gate.add_argument("--detector", choices=detectors, default="colour",
+                      help=detector_help + " (default: colour)")
+    gate.add_argument("--no-detector", dest="detector", action="store_const", const=None,
+                      help="use the fitted sensor model instead of the camera")
+    gate.add_argument("--workers", type=int, default=None,
+                      help="scenarios to run at once (default: half the CPU cores)")
     gate.add_argument("--baseline", type=Path, default=None,
-                      help="defaults to baselines/<tier>-<detector>.json")
+                      help="the recorded run to compare against "
+                           "(default: baselines/<tier>-<detector>.json)")
     gate.add_argument("--update", action="store_true",
                       help="record this run as the new baseline instead of judging it")
     gate.add_argument("--skip-tracking", action="store_true",
@@ -55,7 +86,8 @@ def main(argv=None) -> None:
 
     bake = sub.add_parser("demo-bake", help="build the static demo page's data and videos")
     bake.add_argument("--agent", action="store_true",
-                      help="run the AI agent on a fresh copy of the code first")
+                      help="run the AI agent on a fresh copy of the code first; left out, "
+                           "the page is rebuilt from the agent's last copy")
 
     args = parser.parse_args(argv)
 
