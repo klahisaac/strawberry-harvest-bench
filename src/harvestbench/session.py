@@ -15,6 +15,7 @@ import numpy as np
 from . import metrics, scene
 from .camera import Intrinsics, camera_pose
 from .cell import MuJoCoCell, PickResult, SensorConfig
+from .learned import LearnedDetector
 from .perception import ColorThresholdDetector
 from .policy import BaselinePolicy
 from .scenario import Scenario, generate
@@ -54,7 +55,9 @@ class ScenarioResult:
 
 
 POLICIES = {"baseline": BaselinePolicy}
-DETECTORS = {"colour": ColorThresholdDetector}
+# Two ways to read the survey frame, chosen per run with --detector: the
+# hand-set colour threshold, or the trained network (needs the `ml` group).
+DETECTORS = {"colour": ColorThresholdDetector, "learned": LearnedDetector}
 
 # How close a detection has to land to count as the same berry (metres).
 MATCH_RADIUS_M = 0.06

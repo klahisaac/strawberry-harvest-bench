@@ -29,6 +29,15 @@ uv run harvest run --scenarios 20 --seed 1 --out runs/baseline
 `harvest scene --seed 3` prints the generated MJCF for one scenario, which is
 what to look at when the physics does something surprising.
 
+The survey camera can be read two ways, chosen per run. `--detector colour` is
+a hand-set colour threshold and needs nothing extra. `--detector learned` is a
+trained network and needs PyTorch, which is an optional group:
+
+```bash
+uv sync --group ml
+uv run harvest run --scenarios 20 --seed 1 --detector learned
+```
+
 ## How it works
 
 - **`scenario.py`** — a seeded gutter of berries: position, radius, ripeness,
@@ -53,6 +62,12 @@ what to look at when the physics does something surprising.
   turned into a scene, worked by whatever code is importable, and filmed.
 - **`demobake.py`** — builds the static demo page: runs the code, films the
   simulation, runs Claude Code on a scratch copy, and writes `web/demo/data.js`.
+- **`learned.py`** — the learned detector: a small CenterNet-style network that
+  reports each berry whole, and its trained weights (`weights/`).
+- **`train_detector.py`** — renders and labels training scenes from the
+  simulator's ground truth, and trains the network.
+- **`compare_detectors.py`** — both detectors on the same tier, scored against
+  ground truth by how hidden each berry is.
 - **`camera.py`** — colour, depth and segmentation from the cell's cameras.
   Debug annotations are hidden for every render: the cut points are drawn as
   sites, and a detector that could see them would be reading the answer off the
@@ -109,12 +124,84 @@ A detection is a position with a made-up label, and what gets cut is whatever
 peduncle is within 30 mm of the blades. Matching detections back to real berries
 happens only in scoring.
 
+## Two detectors, one option
+
+The colour threshold measures what it can see. A berry with its top behind a
+leaf reads as a shorter berry, and the cut point lands in the fruit. The learned
+detector (`learned.py`) is trained to report each berry whole — centre, full
+width and height, ripeness and distance — from the part that shows.
+
+It is one small network: 427,000 parameters, a CenterNet-style head on a
+dilated convolutional body, reading the survey frame as RGB plus depth. It runs
+on the CPU, single-threaded, so a run gives the same numbers every time and the
+gate stays exact.
+
+```bash
+uv run --group ml python -m harvestbench.train_detector       # render, label, train
+uv run --group ml python -m harvestbench.compare_detectors    # both, on the full tier
+```
+
+**Training.** 2,400 scenes, 14,138 berries, rendered and labelled by the
+simulator; nothing is annotated by hand. Half are ordinary gutters and half are
+clusters, with fruit touching and overlapping. Training seeds start at 100000:
+the tier scenarios and the demo's photographed cluster are never trained on.
+39 minutes on one GPU. The weights are in the repository (1.7 MB), so
+`--detector learned` works without retraining.
+
+**Perception, full tier** (40 scenarios, 240 berries the network has not seen):
+
+| | colour | learned |
+|---|---|---|
+| position error | 7.8 mm | 1.1 mm |
+| cut-point error | 8.2 mm | 1.2 mm |
+| ripeness error | 0.013 | 0.006 |
+| wrong pick-or-leave decisions | 3 | 0 |
+| found, clear and partial | 208 / 208 | 208 / 208 |
+| found, heavily hidden | 25 / 32 | 21 / 32 |
+| cut-point error, heavily hidden | 21.6 mm | 2.8 mm |
+| false detections | 0 | 0 |
+
+**Harvest, full tier**, the same policy and arm behind each:
+
+| | colour | learned |
+|---|---|---|
+| catch rate | 64.8% | 66.8% |
+| packed success | 61.7% | 62.8% |
+| torn stems and knocks | 14 | 4 |
+| bruised on landing | 59 | 73 |
+| unreachable | 55 | 56 |
+| attempts | 203 | 196 |
+
+What that says, and what it does not:
+
+- **Accurate cut points remove pick damage.** Torn stems and knocks fall from
+  14 to 4. That is the cut landing on the stem instead of in the fruit.
+- **It is not better everywhere.** It finds four fewer heavily hidden berries,
+  and on the six-scenario smoke tier its catch rate is lower, 71.4% against
+  75.0%. Lowering its threshold recovers one to three of them and adds a false
+  detection, so the threshold stays.
+- **Perception does not fix the arm.** Unreachable attempts are unchanged: a
+  leaf in the way is in the way however well the berry behind it is located.
+- **Bruises rose, and the cause is not traced.** Landing speeds sit at the
+  threshold — a median of 0.76 m/s against 0.77 — so small differences flip many
+  of them. It is a different set of berries packed, not a known effect of the
+  detector.
+- **It has only ever seen the simulator.** The network was trained and tested
+  on rendered frames. Nothing here says how it does on a photograph of a real
+  plant; that is the sim-to-real gap, and it is unmeasured.
+
+The tray check, from the wrist camera, stays with the colour detector under
+either option: one berry alone, close and lit, is the easy case, and the
+network was not trained on that view. Baselines for the learned detector are
+recorded beside the others (`baselines/*-learned.json`), so `harvest gate
+--detector learned` judges it the same way.
+
 ## Where it stands
 
 Steps 1 to 3 of 7 in DESIGN.md are done: the cell runs, the baseline works it,
 every attempt is scored and logged, and perception can read a rendered camera
 instead of the simulator's ground truth. Every caught berry is carried to a
-punnet and packed, and success counts what reaches it. 90 tests pass.
+punnet and packed, and success counts what reaches it. 97 tests pass.
 
 Rendering is required — the metric buckets measure occlusion from pixels — and
 `MUJOCO_GL` defaults to EGL so it works without a display.

@@ -17,6 +17,9 @@ demo = [
     "imageio-ffmpeg>=0.8.1",
 ]
 dev = ["pytest"]
+ml = [
+    "torch>=2.15.0",
+]
 
 [build-system]
 requires = ["hatchling"]
