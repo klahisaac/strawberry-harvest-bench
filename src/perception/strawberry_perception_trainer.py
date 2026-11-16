@@ -1,6 +1,6 @@
 """Train a YOLO model that finds ripe (and unripe) strawberries in RGB images.
 
-    uv run --group train python src/perception/strawberry_perception_trainer.py
+    uv run python src/perception/strawberry_perception_trainer.py
 
 The training data is the Blender dataset from src/data_generator/make_dataset.py:
 640x640 RGB images with YOLO boxes in two classes, 0 ripe and 1 unripe. The
