@@ -5,3 +5,5 @@ runs/
 *.egg-info/
 MUJOCO_LOG.TXT
 .claude/
+src/harvestbench-comment/
+/yolo*.pt

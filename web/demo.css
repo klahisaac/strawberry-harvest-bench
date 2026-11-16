@@ -286,3 +286,17 @@ video { width: 100%; border-radius: 12px; background: #000; box-shadow: var(--sh
 .source { margin: 0 0 18px; font-size: 14.5px; color: #d3dccf; }
 .source a { color: #ffffff; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .foot a { color: inherit; }
+
+/* Field images: a strip of the ten attempts, and the failed one as an RGB-D pair. */
+.thumbs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+.thumbs figure { margin: 0; border-radius: 10px; overflow: hidden; border: 2px solid transparent; background: var(--surface); }
+.thumbs figure.bad { border-color: var(--bad); }
+.thumbs img { display: block; width: 100%; height: auto; }
+.thumbs figcaption { font-size: 13px; padding: 4px 8px; color: var(--ink-2); }
+.thumbs figure.bad figcaption { color: var(--bad); font-weight: 600; }
+.rgbd { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rgbd img { width: 100%; height: auto; border-radius: 10px; }
+.rgbd figcaption { grid-column: 1 / -1; }
+@media (max-width: 640px) {
+  .thumbs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

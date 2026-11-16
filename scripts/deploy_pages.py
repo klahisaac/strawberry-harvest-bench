@@ -19,16 +19,16 @@ import base64
 import json
 import mimetypes
 import os
-from pathlib import Path
+import pathlib
 import sys
 import urllib.request
 import uuid
 
-from blake3 import blake3
+import blake3
 
 API = "https://api.cloudflare.com/client/v4"
 PROJECT = os.environ.get("PAGES_PROJECT", "strawberry-harvest-bench")
-WEB = Path(__file__).resolve().parents[1] / "web"
+WEB = pathlib.Path(__file__).resolve().parents[1] / "web"
 BATCH_BYTES = 40 * 1024 * 1024  # stay well under the API's request size limit
 
 
@@ -51,14 +51,14 @@ def call(method: str, url: str, token: str, body=None, headers=None) -> dict:
     return out.get("result")
 
 
-def files() -> dict[str, Path]:
+def files() -> dict[str, pathlib.Path]:
     return {"/" + p.relative_to(WEB).as_posix(): p
             for p in sorted(WEB.rglob("*")) if p.is_file() and not p.name.startswith(".")}
 
 
-def file_hash(path: Path) -> str:
+def file_hash(path: pathlib.Path) -> str:
     contents = base64.b64encode(path.read_bytes()).decode()
-    return blake3((contents + path.suffix.lstrip(".")).encode()).hexdigest()[:32]
+    return blake3.blake3((contents + path.suffix.lstrip(".")).encode()).hexdigest()[:32]
 
 
 def main() -> None:
