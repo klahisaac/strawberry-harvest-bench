@@ -300,3 +300,7 @@ video { width: 100%; border-radius: 12px; background: #000; box-shadow: var(--sh
 @media (max-width: 640px) {
   .thumbs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* The prompt the agent got, word for word. */
+.prompt { margin: 0; padding: 14px 18px; background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius);
+  font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-2); }

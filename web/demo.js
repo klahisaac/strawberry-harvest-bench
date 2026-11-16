@@ -121,7 +121,7 @@
     `<b>The video</b> is rendered by MuJoCo's own renderer, 30 frames per simulated second, and encoded with ffmpeg as H.264.`,
   ]);
 
-  // ---- 4: the agent ---------------------------------------------------------------
+  // ---- 4 and 5: the agent, and its fix ---------------------------------------------------------------
   const G = D.agent;
   const firstPass = (G.checks || []).find((c) => c.passed);
   const last = (G.checks || [])[(G.checks || []).length - 1];
@@ -138,7 +138,8 @@
       its prompt. It could read and edit the copy and run exactly one command, <code>./check.sh</code>, which reruns all
       ten logged attempts in the simulator. It was told to change only <code>robot_controller.py</code>: the simulator
       and the data are the experiment.</p>`;
-  $("explain").innerHTML = md(D.pr.explanation || D.pr.body);
+  $("prompt").textContent = G.prompt || "";
+  $("answer").innerHTML = md(G.text);
   $("diff").innerHTML = D.diff.map((f) => `<div class="diff-file"><header><span>${esc(f.path)}</span>
       <span class="add">+${f.added}</span><span class="del">−${f.removed}</span></header>
       <pre>${f.diff.split("\n").map((l) => {
@@ -150,14 +151,14 @@
   $("cmpBefore").innerHTML = verdict(before, "Before: not picked");
   $("cmpAfter").innerHTML = verdict(after, after.outcome === "picked" ? "After: picked" : "After: still failing");
 
-  // ---- 5: rerun ----------------------------------------------------------------------
+  // ---- 6: rerun ----------------------------------------------------------------------
   const picked = D.after.filter((r) => r.outcome === "picked").length;
   $("afterTable").innerHTML = resultTable(D.after, false);
   $("afterNote").textContent = picked === D.after.length
     ? `All ${picked} attempts are picked with the agent's code: the nine ordinary picks still work, and ${D.failed_pick} now does too.`
     : `${picked} of ${D.after.length} attempts are picked with the agent's code.`;
 
-  // ---- 6: PR -------------------------------------------------------------------------
+  // ---- 7: PR -------------------------------------------------------------------------
   const P = D.pr;
   const added = D.diff.reduce((s, f) => s + f.added, 0), removed = D.diff.reduce((s, f) => s + f.removed, 0);
   const onlyController = D.diff.every((f) => !f.protected);

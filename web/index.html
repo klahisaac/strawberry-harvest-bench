@@ -21,8 +21,9 @@
       other logged attempt, and sent for review. Every step below was really run and recorded.</p>
     <ol class="flow" aria-label="The steps">
       <li><a href="#step1">Field log</a></li><li><a href="#step2">Image → simulation</a></li>
-      <li><a href="#step3">Reproduce</a></li><li><a href="#step4">AI fix</a></li>
-      <li><a href="#step5">Recheck</a></li><li><a href="#step6">Pull request</a></li>
+      <li><a href="#step3">Reproduce</a></li><li><a href="#step4">Prompt</a></li>
+      <li><a href="#step5">AI fix</a></li><li><a href="#step6">Recheck</a></li>
+      <li><a href="#step7">Pull request</a></li>
     </ol>
     <p class="source">Source code:
       <a href="https://github.com/klahisaac/strawberry-harvest-bench">github.com/klahisaac/strawberry-harvest-bench</a></p>
@@ -99,13 +100,24 @@
   <section class="step" id="step4">
     <header class="step-head">
       <span class="step-num">4</span>
-      <div><h2>The fix, written by an AI agent</h2>
+      <div><h2>The prompt, and the agent's answer</h2>
         <p>An AI agent was given the field report, a copy of the code, and one command that reruns
-          every logged attempt in the simulator. It was allowed to change only the robot's controller.</p></div>
+          every logged attempt in the simulator. It was allowed to change only the robot's controller.
+          Below are the prompt it got and the answer it gave, word for word.</p></div>
     </header>
     <div class="agent-card" id="agentCard"></div>
-    <h3 class="subhead">Why it changed the code — the agent's explanation</h3>
-    <div class="explain" id="explain"></div>
+    <h3 class="subhead">The prompt</h3>
+    <pre class="prompt" id="prompt"></pre>
+    <h3 class="subhead">The agent's answer</h3>
+    <div class="explain" id="answer"></div>
+  </section>
+
+  <section class="step" id="step5">
+    <header class="step-head">
+      <span class="step-num">5</span>
+      <div><h2>The fix, in the code</h2>
+        <p>The change the agent made to <code>robot_controller.py</code>, and the failed attempt run again with it.</p></div>
+    </header>
     <h3 class="subhead">What it changed</h3>
     <div id="diff"></div>
     <details class="transcript"><summary>What the agent said while it worked</summary><div id="sayings"></div></details>
@@ -120,9 +132,9 @@
     </div>
   </section>
 
-  <section class="step" id="step5">
+  <section class="step" id="step6">
     <header class="step-head">
-      <span class="step-num">5</span>
+      <span class="step-num">6</span>
       <div><h2>Every attempt, rerun with the fix</h2>
         <p>A fix for one awkward cluster must not break the nine ordinary picks.</p></div>
     </header>
@@ -130,9 +142,9 @@
     <p class="smoke-note" id="afterNote"></p>
   </section>
 
-  <section class="step" id="step6">
+  <section class="step" id="step7">
     <header class="step-head">
-      <span class="step-num">6</span>
+      <span class="step-num">7</span>
       <div><h2>Pull request, sent for review</h2>
         <p>The change goes out as a pull request, and a reviewer is asked to look at it. Nothing
           was pushed anywhere for this demo.</p></div>

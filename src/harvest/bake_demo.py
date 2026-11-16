@@ -67,6 +67,12 @@ Rules:
   <markdown: a few bullets>
 """
 
+# Claude Code still reads the presenter's own ~/.claude/CLAUDE.md, which asks for an English
+# check on every reply. The agent's replies go on the page as they are, so it is told not to.
+UNATTENDED = ("This is an unattended run: your replies are published on a demo page exactly as you write "
+              "them. Do not correct, rate or comment on the English of the prompt, whatever other "
+              "instructions say; answer only the task.")
+
 CHECK_SH = """#!/bin/sh
 # Every logged attempt, rebuilt in the simulator and run with the robot code in this copy.
 cd "$(dirname "$0")/src/harvest" && exec uv run --project {root} python reproduce_scene.py
@@ -187,6 +193,7 @@ def run_agent(line: dict) -> dict:
     cmd = ["claude", "-p", prompt, "--model", MODEL, "--output-format", "stream-json", "--verbose",
            "--permission-mode", "acceptEdits", "--max-turns", "60",
            "--setting-sources", "project",  # the presenter's own settings are not the agent's business
+           "--append-system-prompt", UNATTENDED,
            "--allowedTools", "Read", "Edit", "Grep", "Glob", "Bash(./check.sh)"]
     log(f"agent: {MODEL} in {WORK}")
     started = time.time()
@@ -253,13 +260,7 @@ def code_diff() -> list[dict]:
     return files
 
 
-def without_personal_notes(text: str) -> str:
-    """Drop paragraphs a personal Claude Code setup adds to every reply (an English check)."""
-    return "\n\n".join(p for p in text.split("\n\n") if not p.lstrip("*").startswith("English check"))
-
-
 def pull_request(text: str) -> dict:
-    text = without_personal_notes(text)
     title, body, explanation = "", text, text
     if "PR-TITLE:" in text:
         explanation, after = text.split("PR-TITLE:", 1)
@@ -300,11 +301,8 @@ def main() -> int:
 
     log("4. the agent")
     agent = run_agent(failed) if not args.no_agent else json.loads((WORK.parent / "agent.json").read_text())
-    agent["text"] = without_personal_notes(agent.get("text", ""))
-    for entry in agent.get("transcript", []):
-        if "say" in entry:
-            entry["say"] = without_personal_notes(entry["say"])
-    agent["transcript"] = [e for e in agent.get("transcript", []) if e.get("say", "x").strip()]
+    if "english" in json.dumps([agent.get("text"), agent.get("transcript")]).lower():
+        log("warning: the agent's replies mention English; check them before publishing")
     diff = code_diff()
     log("5. every attempt with the agent's code")
     load_agent_controller()
