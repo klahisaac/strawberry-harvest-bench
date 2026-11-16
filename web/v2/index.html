@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Failure to Fix</title>
+<meta name="description" content="A recorded demo. A strawberry-harvesting robot fails in the field. Its log and RGB-D image become a MuJoCo simulation, an AI agent fixes the robot's controller against it, every logged attempt is rerun, and a pull request goes out for review.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<nav style="background:#0f1a13;color:#cfe0d3;font:14px/1.4 ui-sans-serif,system-ui,sans-serif;padding:10px 16px;display:flex;gap:16px;align-items:center;justify-content:space-between"><a href="../" style="color:#ffffff;font-weight:700;text-decoration:none">← All versions</a><span>Version 2 · current</span></nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Strawberry harvest · recorded demo</p>
+    <h1>From a field failure<br>to a reviewed fix</h1>
+    <p class="lede">A harvesting robot went for a ripe strawberry, hit the unripe one hanging in
+      front of it with its cutter, and stopped at its force limit. This page follows that one failure the whole way: found in the
+      robot's log, rebuilt as a MuJoCo simulation from the robot's own RGB-D image, reproduced with
+      the code as it was, fixed by an AI agent working against the simulation, checked against every
+      other logged attempt, and sent for review. Every step below was really run and recorded.</p>
+    <ol class="flow" aria-label="The steps">
+      <li><a href="#step1">Field log</a></li><li><a href="#step2">Image → simulation</a></li>
+      <li><a href="#step3">Reproduce</a></li><li><a href="#step4">Prompt</a></li>
+      <li><a href="#step5">AI fix</a></li><li><a href="#step6">Recheck</a></li>
+      <li><a href="#step7">Pull request</a></li>
+    </ol>
+    <p class="source">Source code:
+      <a href="https://github.com/klahisaac/strawberry-harvest-bench">github.com/klahisaac/strawberry-harvest-bench</a></p>
+    <div class="stack" id="stack"></div>
+  </div>
+</header>
+
+<main>
+
+  <section class="step" id="step1">
+    <header class="step-head">
+      <span class="step-num">1</span>
+      <div><h2>The field log</h2>
+        <p>One shift of harvester-01 in gutter row G3. Every attempt writes a line and keeps the
+          RGB-D image its camera took just before picking. Nine are ordinary; one is not.</p></div>
+    </header>
+    <div class="card flush"><table class="log" id="logTable"></table></div>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="incident">
+      <div class="incident-text">
+        <p class="label">Incident · selected</p>
+        <h3 id="incTitle"></h3>
+        <p id="incWhy" class="why"></p>
+        <p class="rename-note">Earlier versions of this demo logged this outcome as <code>stem_torn</code>.
+          It was renamed to <code>collision</code>: the cutter hits the unripe berry and the robot stops
+          at its force limit before reaching the stem.</p>
+      </div>
+      <figure class="photo rgbd">
+        <img id="incRgb" alt="The robot's RGB image of the failed attempt">
+        <img id="incDepth" alt="The robot's depth image of the failed attempt">
+        <figcaption>The robot's RGB-D image of the failed attempt: colour, and depth (near is warm,
+          far is cool). An unripe berry hangs in front of the ripe one, over its top, where the stem is cut.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="step" id="step2">
+    <header class="step-head">
+      <span class="step-num">2</span>
+      <div><h2>The image, as a simulation</h2>
+        <p>The berries are found in the image, placed in 3D from the depth, and put in front of a
+          simulated 6-axis arm.</p></div>
+    </header>
+    <div class="triptych">
+      <figure class="frame">
+        <div class="overlay-wrap">
+          <img id="foundImg" alt="The failed attempt's image">
+          <svg id="foundSvg" class="overlay" viewBox="0 0 640 640"></svg>
+        </div>
+        <figcaption>The robot's image with the YOLO model's boxes: class and confidence</figcaption>
+      </figure>
+      <div class="arrow" aria-hidden="true">→</div>
+      <figure class="frame">
+        <img src="demo/sim-view.png" alt="The same berries in the MuJoCo simulation, seen from the robot's camera">
+        <figcaption>The same berries in MuJoCo, seen from where the robot's camera was</figcaption>
+      </figure>
+    </div>
+    <div class="card flush"><table class="data" id="berryTable"></table></div>
+    <div class="how" id="howSim"></div>
+  </section>
+
+  <section class="step" id="step3">
+    <header class="step-head">
+      <span class="step-num">3</span>
+      <div><h2>The failure, reproduced with the current code</h2>
+        <p>Every logged attempt is rebuilt the same way and run with the robot's controller as it
+          is. The simulation should end each one the way the field did.</p></div>
+    </header>
+    <div class="result">
+      <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
+      <div class="verdict-panel" id="beforeVerdict"></div>
+    </div>
+    <div class="card flush"><table class="data" id="beforeTable"></table></div>
+    <div class="how" id="howBefore"></div>
+  </section>
+
+  <section class="step" id="step4">
+    <header class="step-head">
+      <span class="step-num">4</span>
+      <div><h2>The prompt, and the agent's answer</h2>
+        <p>An AI agent was given the field report, a copy of the code, and one command that reruns
+          every logged attempt in the simulator. It was allowed to change only the robot's controller.
+          Below are the prompt it got and the answer it gave, word for word.</p></div>
+    </header>
+    <div class="agent-card" id="agentCard"></div>
+    <h3 class="subhead">The prompt</h3>
+    <pre class="prompt" id="prompt"></pre>
+    <h3 class="subhead">The agent's answer</h3>
+    <div class="explain" id="answer"></div>
+  </section>
+
+  <section class="step" id="step5">
+    <header class="step-head">
+      <span class="step-num">5</span>
+      <div><h2>The fix, in the code</h2>
+        <p>The change the agent made to <code>robot_controller.py</code>, and the failed attempt run again with it.</p></div>
+    </header>
+    <h3 class="subhead">What it changed</h3>
+    <div id="diff"></div>
+    <details class="transcript"><summary>What the agent said while it worked</summary><div id="sayings"></div></details>
+    <h3 class="subhead">The failed attempt, before and after</h3>
+    <div class="compare">
+      <figure><figcaption>Before — current code</figcaption>
+        <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
+        <div class="mini" id="cmpBefore"></div></figure>
+      <figure><figcaption>After — the agent's fix</figcaption>
+        <video src="demo/after.mp4" controls muted playsinline loop autoplay></video>
+        <div class="mini" id="cmpAfter"></div></figure>
+    </div>
+  </section>
+
+  <section class="step" id="step6">
+    <header class="step-head">
+      <span class="step-num">6</span>
+      <div><h2>Every attempt, rerun with the fix</h2>
+        <p>A fix for one awkward cluster must not break the nine ordinary picks.</p></div>
+    </header>
+    <div class="card flush"><table class="data" id="afterTable"></table></div>
+    <p class="smoke-note" id="afterNote"></p>
+  </section>
+
+  <section class="step" id="step7">
+    <header class="step-head">
+      <span class="step-num">7</span>
+      <div><h2>Pull request, sent for review</h2>
+        <p>The change goes out as a pull request, and a reviewer is asked to look at it. Nothing
+          was pushed anywhere for this demo.</p></div>
+    </header>
+    <div class="pr" id="pr"></div>
+  </section>
+
+</main>
+
+<footer class="foot"><span id="foot"></span><br>
+  Source: <a href="https://github.com/klahisaac/strawberry-harvest-bench">github.com/klahisaac/strawberry-harvest-bench</a></footer>
+
+<script src="demo/data.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>

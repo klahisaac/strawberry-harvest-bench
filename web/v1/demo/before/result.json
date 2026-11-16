@@ -1,0 +1,161 @@
+{
+ "detections": [
+  {
+   "label": "d00",
+   "berry": "unripe2",
+   "ripeness": 0.0
+  },
+  {
+   "label": "d01",
+   "berry": "ripe",
+   "ripeness": 0.86
+  },
+  {
+   "label": "d02",
+   "berry": "unripe1",
+   "ripeness": 0.0
+  },
+  {
+   "label": "d03",
+   "berry": "unripe3",
+   "ripeness": 0.0
+  }
+ ],
+ "attempts": [
+  {
+   "label": "d01",
+   "aimed_at": "ripe",
+   "outcome": "stem_torn",
+   "cut": "unripe1",
+   "knocked": [
+    "ripe"
+   ],
+   "note": "cutter pressed 76.6 N on unripe1 while it was still attached",
+   "error_mm": 9.5,
+   "packed": false,
+   "peak_force_n": 76.56,
+   "duration_s": 1.18
+  }
+ ],
+ "harvested": false,
+ "damaged": [
+  "ripe",
+  "unripe1"
+ ],
+ "passed": false,
+ "events": [
+  {
+   "robot_id": "harvester-01",
+   "t": 0.2,
+   "event": "run.started",
+   "detail": "FIELD-0417",
+   "berries": 4
+  },
+  {
+   "robot_id": "harvester-01",
+   "t": 0.2,
+   "event": "perception.frame",
+   "detail": "4 candidates",
+   "detector": "colour",
+   "detected": [
+    "d00",
+    "d01",
+    "d02",
+    "d03"
+   ],
+   "detections": [
+    {
+     "id": "d00",
+     "pos": [
+      0.6285,
+      0.4285,
+      0.8186
+     ],
+     "radius": 0.0122,
+     "half_height": 0.0159,
+     "ripeness": 0.0,
+     "confidence": 0.956
+    },
+    {
+     "id": "d01",
+     "pos": [
+      0.5998,
+      0.4321,
+      0.7671
+     ],
+     "radius": 0.0206,
+     "half_height": 0.0243,
+     "ripeness": 0.856,
+     "confidence": 0.835
+    },
+    {
+     "id": "d02",
+     "pos": [
+      0.5971,
+      0.3588,
+      0.8055
+     ],
+     "radius": 0.0154,
+     "half_height": 0.0214,
+     "ripeness": 0.0,
+     "confidence": 0.996
+    },
+    {
+     "id": "d03",
+     "pos": [
+      0.5672,
+      0.4273,
+      0.7739
+     ],
+     "radius": 0.0113,
+     "half_height": 0.015,
+     "ripeness": 0.0,
+     "confidence": 1.0
+    }
+   ]
+  },
+  {
+   "robot_id": "harvester-01",
+   "t": 0.2,
+   "event": "pick.started",
+   "detail": "d01",
+   "cut_point": [
+    0.5998,
+    0.4321,
+    0.8035
+   ],
+   "est_ripeness": 0.856
+  },
+  {
+   "robot_id": "harvester-01",
+   "t": 0.876,
+   "event": "arm.at_cut_point",
+   "detail": "d01",
+   "reached": true,
+   "error_m": 0.0095
+  },
+  {
+   "robot_id": "harvester-01",
+   "t": 1.378,
+   "event": "arm.parked",
+   "detail": ""
+  },
+  {
+   "robot_id": "harvester-01",
+   "t": 1.378,
+   "event": "pick.failed",
+   "detail": "cutter pressed 76.6 N on unripe1 while it was still attached",
+   "berry_id": "d01",
+   "cut_berry_id": "unripe1",
+   "outcome": "stem_torn",
+   "caught": false,
+   "knocked": [
+    "ripe"
+   ],
+   "peak_force_n": 76.56,
+   "tray_ripeness": null,
+   "duration_s": 1.18
+  }
+ ],
+ "video": "attempt.mp4"
+}

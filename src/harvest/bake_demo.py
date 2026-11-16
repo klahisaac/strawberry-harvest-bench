@@ -35,7 +35,7 @@ import reproduce_scene
 
 ROOT = reproduce_scene.ROOT
 HERE = pathlib.Path(__file__).resolve().parent
-WEB = ROOT / "web" / "demo"
+WEB = ROOT / "web" / "v2" / "demo"  # this pipeline is version 2 of the demo
 WORK = ROOT / "runs" / "demo" / "work"  # the agent's copy of the code
 ORIGINAL = ROOT / "runs" / "demo" / "original"  # the code as the agent was given it, to diff against
 FAILED_PICK = "p07"

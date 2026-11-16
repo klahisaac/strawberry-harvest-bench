@@ -4,163 +4,132 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Field Failure to Fix</title>
-<meta name="description" content="A recorded demo. A strawberry-harvesting robot fails in the field. Its log and RGB-D image become a MuJoCo simulation, an AI agent fixes the robot's controller against it, every logged attempt is rerun, and a pull request goes out for review.">
+<meta name="description" content="Every version of a recorded demo in which a strawberry-harvesting robot's field failure is rebuilt in MuJoCo and fixed by an AI agent: how each was built, what was wrong with it, and what the next one improved.">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="demo.css">
+<link rel="stylesheet" href="versions.css">
 </head>
 <body>
 
 <header class="hero">
   <div class="hero-inner">
-    <p class="eyebrow">Strawberry harvest · recorded demo</p>
+    <p class="eyebrow">Strawberry harvest · every version of the demo</p>
     <h1>From a field failure<br>to a reviewed fix</h1>
-    <p class="lede">A harvesting robot went for a ripe strawberry, hit the unripe one hanging in
-      front of it with its cutter, and stopped at its force limit. This page follows that one failure the whole way: found in the
-      robot's log, rebuilt as a MuJoCo simulation from the robot's own RGB-D image, reproduced with
-      the code as it was, fixed by an AI agent working against the simulation, checked against every
-      other logged attempt, and sent for review. Every step below was really run and recorded.</p>
-    <ol class="flow" aria-label="The steps">
-      <li><a href="#step1">Field log</a></li><li><a href="#step2">Image → simulation</a></li>
-      <li><a href="#step3">Reproduce</a></li><li><a href="#step4">Prompt</a></li>
-      <li><a href="#step5">AI fix</a></li><li><a href="#step6">Recheck</a></li>
-      <li><a href="#step7">Pull request</a></li>
-    </ol>
+    <p class="lede">A harvesting robot fails a pick in the field. The failure is rebuilt as a MuJoCo
+      simulation, an AI agent fixes the robot's code against it, and the fix goes out for review.
+      The demo only means something if the simulation is honest about what happened, so it has been
+      rebuilt more than once. Each card says how that version was built, what was wrong with it,
+      and what the next one improved. Open a card to see that version's demo as it was recorded.</p>
     <p class="source">Source code:
       <a href="https://github.com/klahisaac/strawberry-harvest-bench">github.com/klahisaac/strawberry-harvest-bench</a></p>
-    <div class="stack" id="stack"></div>
   </div>
 </header>
 
 <main>
+  <ol class="cards">
 
-  <section class="step" id="step1">
-    <header class="step-head">
-      <span class="step-num">1</span>
-      <div><h2>The field log</h2>
-        <p>One shift of harvester-01 in gutter row G3. Every attempt writes a line and keeps the
-          RGB-D image its camera took just before picking. Nine are ordinary; one is not.</p></div>
-    </header>
-    <div class="card flush"><table class="log" id="logTable"></table></div>
-    <div class="thumbs" id="thumbs"></div>
-    <div class="incident">
-      <div class="incident-text">
-        <p class="label">Incident · selected</p>
-        <h3 id="incTitle"></h3>
-        <p id="incWhy" class="why"></p>
-        <p class="rename-note">Earlier versions of this demo logged this outcome as <code>stem_torn</code>.
-          It was renamed to <code>collision</code>: the cutter hits the unripe berry and the robot stops
-          at its force limit before reaching the stem.</p>
-      </div>
-      <figure class="photo rgbd">
-        <img id="incRgb" alt="The robot's RGB image of the failed attempt">
-        <img id="incDepth" alt="The robot's depth image of the failed attempt">
-        <figcaption>The robot's RGB-D image of the failed attempt: colour, and depth (near is warm,
-          far is cool). An unripe berry hangs in front of the ripe one, over its top, where the stem is cut.</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <section class="step" id="step2">
-    <header class="step-head">
-      <span class="step-num">2</span>
-      <div><h2>The image, as a simulation</h2>
-        <p>The berries are found in the image, placed in 3D from the depth, and put in front of a
-          simulated 6-axis arm.</p></div>
-    </header>
-    <div class="triptych">
-      <figure class="frame">
-        <div class="overlay-wrap">
-          <img id="foundImg" alt="The failed attempt's image">
-          <svg id="foundSvg" class="overlay" viewBox="0 0 640 640"></svg>
+    <li>
+      <a class="card" href="v1/">
+        <div class="thumb"><img src="v1/demo/sim-photo.png" alt="Version 1: the berries as rigid bodies in the first simulation"></div>
+        <div class="body">
+          <div class="head"><span class="version">V1</span><span class="status archived">Archived</span></div>
+          <h2>A photo, measured by colour, turned into a simulation</h2>
+          <div class="block">
+            <h3>How it was built</h3>
+            <ul>
+              <li>Berries in one field photo found by a hand-set colour threshold</li>
+              <li>Each berry a rigid body welded to a fixed anchor standing in for its stem; cutting
+                the stem switched the weld off</li>
+              <li>A 4-joint arm; an AI agent fixed the picking policy</li>
+            </ul>
+          </div>
+          <div class="block problem">
+            <h3>What was wrong</h3>
+            <ul>
+              <li>The failure was logged as <code>stem_torn</code>, but what happened was the cutter
+                pressing on the unripe berry in front. Pushing a berry does not tear a stem.</li>
+              <li>The weld did not give, so the cutter pressed with 76.6 N, far more than a hanging
+                berry could push back.</li>
+            </ul>
+          </div>
+          <span class="cta">Open the V1 demo →</span>
         </div>
-        <figcaption>The robot's image with the YOLO model's boxes: class and confidence</figcaption>
-      </figure>
-      <div class="arrow" aria-hidden="true">→</div>
-      <figure class="frame">
-        <img src="demo/sim-view.png" alt="The same berries in the MuJoCo simulation, seen from the robot's camera">
-        <figcaption>The same berries in MuJoCo, seen from where the robot's camera was</figcaption>
-      </figure>
-    </div>
-    <div class="card flush"><table class="data" id="berryTable"></table></div>
-    <div class="how" id="howSim"></div>
-  </section>
+      </a>
+    </li>
 
-  <section class="step" id="step3">
-    <header class="step-head">
-      <span class="step-num">3</span>
-      <div><h2>The failure, reproduced with the current code</h2>
-        <p>Every logged attempt is rebuilt the same way and run with the robot's controller as it
-          is. The simulation should end each one the way the field did.</p></div>
-    </header>
-    <div class="result">
-      <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
-      <div class="verdict-panel" id="beforeVerdict"></div>
-    </div>
-    <div class="card flush"><table class="data" id="beforeTable"></table></div>
-    <div class="how" id="howBefore"></div>
-  </section>
+    <li>
+      <a class="card" href="v2/">
+        <div class="thumb"><img src="v2/demo/sim-view.png" alt="Version 2: the berries in MuJoCo, seen from the robot's camera"></div>
+        <div class="body">
+          <div class="head"><span class="version">V2</span><span class="status live">Current</span></div>
+          <h2>RGB-D images, a YOLO detector and a 6-axis arm</h2>
+          <div class="block">
+            <h3>How it was built</h3>
+            <ul>
+              <li>Ten logged attempts, each with an RGB-D image rendered in Blender</li>
+              <li>A YOLO11n model boxes each berry and says if it is ripe; depth places it in 3D</li>
+              <li>A 6-axis arm; the agent may change only <code>robot_controller.py</code></li>
+            </ul>
+          </div>
+          <div class="block better">
+            <h3>Better than V1</h3>
+            <ul>
+              <li>A trained detector instead of a colour threshold, and real depth instead of a guess</li>
+              <li>The failure is called what it is: a <code>collision</code> with the unripe berry,
+                stopped at the robot's 5 N force limit</li>
+            </ul>
+          </div>
+          <div class="block problem">
+            <h3>What was wrong</h3>
+            <ul>
+              <li>The berries are hard and fixed in place, and the stems are only drawn: a stem acts
+                like a steel wire.</li>
+              <li>So the cutter meets the unripe berry like a wall: 51.8 N, ten times the limit. A real
+                berry on a soft stem would swing out of the way.</li>
+            </ul>
+          </div>
+          <span class="cta">Open the V2 demo →</span>
+        </div>
+      </a>
+    </li>
 
-  <section class="step" id="step4">
-    <header class="step-head">
-      <span class="step-num">4</span>
-      <div><h2>The prompt, and the agent's answer</h2>
-        <p>An AI agent was given the field report, a copy of the code, and one command that reruns
-          every logged attempt in the simulator. It was allowed to change only the robot's controller.
-          Below are the prompt it got and the answer it gave, word for word.</p></div>
-    </header>
-    <div class="agent-card" id="agentCard"></div>
-    <h3 class="subhead">The prompt</h3>
-    <pre class="prompt" id="prompt"></pre>
-    <h3 class="subhead">The agent's answer</h3>
-    <div class="explain" id="answer"></div>
-  </section>
+    <li>
+      <div class="card pending" aria-disabled="true">
+        <div class="thumb"><img src="assets/v3-preview.jpg" alt="Version 3: the unripe berry's stem bending as the cutter pushes it aside"></div>
+        <div class="body">
+          <div class="head"><span class="version">V3</span><span class="status wip">In progress</span></div>
+          <h2>Soft, elastic stems</h2>
+          <div class="block">
+            <h3>How it is built</h3>
+            <ul>
+              <li>Each stem is an elastic rod that bends and twists (MuJoCo's 1D flexcomp), clamped where
+                it hangs from</li>
+              <li>Each fruit is a free body hanging from the end of its stem</li>
+            </ul>
+          </div>
+          <div class="block better">
+            <h3>Better than V2</h3>
+            <ul>
+              <li>A pushed berry swings aside and its stem bends, then it swings back</li>
+              <li>Contact forces are realistic: pushing the unripe berry aside takes about 0.15 N,
+                not 51.8 N</li>
+            </ul>
+          </div>
+          <div class="block open">
+            <h3>Still open</h3>
+            <ul>
+              <li>With stems this soft, going straight in no longer fails: the unripe berry just swings
+                out of the way. The field failure needs a new, realistic cause before V3 can be a demo.</li>
+            </ul>
+          </div>
+          <span class="cta">Demo not recorded yet</span>
+        </div>
+      </div>
+    </li>
 
-  <section class="step" id="step5">
-    <header class="step-head">
-      <span class="step-num">5</span>
-      <div><h2>The fix, in the code</h2>
-        <p>The change the agent made to <code>robot_controller.py</code>, and the failed attempt run again with it.</p></div>
-    </header>
-    <h3 class="subhead">What it changed</h3>
-    <div id="diff"></div>
-    <details class="transcript"><summary>What the agent said while it worked</summary><div id="sayings"></div></details>
-    <h3 class="subhead">The failed attempt, before and after</h3>
-    <div class="compare">
-      <figure><figcaption>Before — current code</figcaption>
-        <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
-        <div class="mini" id="cmpBefore"></div></figure>
-      <figure><figcaption>After — the agent's fix</figcaption>
-        <video src="demo/after.mp4" controls muted playsinline loop autoplay></video>
-        <div class="mini" id="cmpAfter"></div></figure>
-    </div>
-  </section>
-
-  <section class="step" id="step6">
-    <header class="step-head">
-      <span class="step-num">6</span>
-      <div><h2>Every attempt, rerun with the fix</h2>
-        <p>A fix for one awkward cluster must not break the nine ordinary picks.</p></div>
-    </header>
-    <div class="card flush"><table class="data" id="afterTable"></table></div>
-    <p class="smoke-note" id="afterNote"></p>
-  </section>
-
-  <section class="step" id="step7">
-    <header class="step-head">
-      <span class="step-num">7</span>
-      <div><h2>Pull request, sent for review</h2>
-        <p>The change goes out as a pull request, and a reviewer is asked to look at it. Nothing
-          was pushed anywhere for this demo.</p></div>
-    </header>
-    <div class="pr" id="pr"></div>
-  </section>
-
+  </ol>
 </main>
 
-<footer class="foot"><span id="foot"></span><br>
-  Source: <a href="https://github.com/klahisaac/strawberry-harvest-bench">github.com/klahisaac/strawberry-harvest-bench</a></footer>
+<footer class="foot">Each version's page is kept as it was recorded; only a link back to this list was added.</footer>
 
-<script src="demo/data.js"></script>
-<script src="demo.js"></script>
 </body>
 </html>

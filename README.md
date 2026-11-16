@@ -6,7 +6,9 @@ RGB-D image, reproduces the failure with the robot's code as it was, lets an AI
 agent fix the robot's controller against the simulation, reruns every logged
 attempt, and writes the change up as a pull request.
 
-**Demo:** https://harvest.isaacon.dev, a recorded run of every step.
+**Demo:** https://harvest.isaacon.dev, a recorded run of every step. The site lists
+every version of the demo: how each was built, what was wrong with it, and what
+the next one improved. This README describes version 2.
 
 ## The failure
 
@@ -34,7 +36,7 @@ Blender ──► RGB-D images + YOLO boxes ──► YOLO11n detector
         reproduce_scene.py: YOLO + depth → berries in 3D → MuJoCo scene
                  │            6-axis arm driven by robot_controller.py
                  ▼
-        bake_demo.py: reproduce → agent fixes robot_controller.py → rerun → web/demo/
+        bake_demo.py: reproduce → agent fixes robot_controller.py → rerun → web/v2/demo/
 ```
 
 1. **Data.** Blender (Cycles) renders a greenhouse gutter with strawberry
@@ -68,9 +70,9 @@ collision.
 | `src/perception/strawberry_perception_trainer.py` | trains the YOLO detector |
 | `src/harvest/robot_controller.py` | the robot's decisions: target and cutter path. The only file the agent edits |
 | `src/harvest/reproduce_scene.py` | rebuilds each attempt in MuJoCo and runs the controller |
-| `src/harvest/bake_demo.py` | runs every step, the agent included, and writes `web/demo/` |
+| `src/harvest/bake_demo.py` | runs every step, the agent included, and writes `web/v2/demo/` |
 | `models/strawberry_yolo.pt` | the trained detector |
-| `web/` | the static demo page |
+| `web/` | the static demo site: a list of every version, with each version's page in `web/v1/`, `web/v2/` |
 | `scripts/deploy_pages.py` | uploads `web/` to Cloudflare Pages |
 
 ## Running it
