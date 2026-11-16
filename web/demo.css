@@ -157,6 +157,7 @@ td.num { font-variant-numeric: tabular-nums; }
 .incident .label { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--bad); font-weight: 700; }
 .incident h3 { margin: 4px 0 6px; font-size: 20px; }
 .incident .why { margin: 0 0 14px; color: var(--ink-2); }
+.incident .rename-note { margin: 0 0 14px; font-size: 13px; color: var(--ink-2); }
 .timeline { font-family: var(--mono); font-size: 12.5px; background: var(--code-bg); border-radius: 10px; padding: 10px 12px; overflow-x: auto; }
 .timeline div { white-space: pre; }
 .timeline .t { color: var(--muted); }

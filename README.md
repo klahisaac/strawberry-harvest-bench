@@ -19,6 +19,10 @@ unripe berry with 51.8 N, over its 5 N force limit, and stops:
 {"pick": "p07", "event": "pick.aborted", "outcome": "collision", "peak_force_n": 51.8, "flags": ["force_limit"], ...}
 ```
 
+Earlier versions of this demo logged this outcome as `stem_torn`. It was
+renamed to `collision`: the cutter hits the unripe berry and the robot stops
+at its force limit before reaching the stem.
+
 ## How it works
 
 ```
