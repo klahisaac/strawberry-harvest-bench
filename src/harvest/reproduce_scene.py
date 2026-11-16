@@ -118,31 +118,60 @@ ARM = """
 
 HOME_TIP = np.array([0.0, 0.30, 0.42])  # where the cutter waits, well in front of the plant
 HOME_GUESS = np.array([0.0, 0.2, -1.8, 0.0, 0.0, 0.0])  # elbow up, cutter forward
+ARM_JOINTS = 6  # first in qpos; the stems' joints follow
+
+STEM = np.array([0.0, 0.08, 0.2])  # from the top of the fruit up to where the stem hangs from
+STEM_SEGMENTS = 4
+STEM_STIFFNESS = 1.0  # N·m/rad at each joint of the stem: how hard it springs back
+STEM_DAMPING = 0.005  # N·m·s/rad: how quickly a swing dies out
+
+
+def _vec(v) -> str:
+    return " ".join(f"{c:.5f}" for c in v)
+
+
+def _hanging_berry(i: int, berry: robot_controller.Berry) -> str:
+    """A berry on a jointed stem: a chain of short segments from the hanging point down to the fruit.
+
+    Each joint bends both ways and springs back, so a pushed berry swings away
+    and settles again instead of standing still like a wall.
+    """
+    segment = STEM / STEM_SEGMENTS
+    across = np.cross(STEM, [1.0, 0.0, 0.0])
+    joints = (f'<joint type="hinge" axis="1 0 0" class="stem"/>'
+              f'<joint type="hinge" axis="{_vec(across / np.linalg.norm(across))}" class="stem"/>')
+    color = "0.75 0.05 0.05 1" if berry.ripe else "0.75 0.8 0.5 1"
+    cut_point = berry.top + [0.0, 0.0, robot_controller.CUT_ABOVE_TOP]
+    xml = (f'<body name="fruit{i}" pos="{_vec(-segment)}">{joints}'
+           f'<geom name="berry{i}" type="ellipsoid" pos="{_vec(berry.center - berry.top)}" '
+           f'size="{berry.radius} {berry.radius} {1.4 * berry.radius}" rgba="{color}" contype="0"/>'
+           f'</body>')
+    for k in range(STEM_SEGMENTS):  # wrapped from the fruit outwards; segment 0 is next to the fruit
+        start = berry.top + segment * (k + 1)  # this segment's upper end, where its joint is
+        cut_site = (f'<site name="cut{i}" pos="{_vec(cut_point - start)}" size="0.002"/>'
+                    if k == 0 else "")
+        xml = (f'<body pos="{_vec(start if k == STEM_SEGMENTS - 1 else -segment)}">{joints}'
+               f'<geom type="capsule" fromto="0 0 0 {_vec(-segment)}" size="0.0012" class="stem"/>'
+               f'{cut_site}{xml}</body>')
+    return xml
 
 
 def build_scene(berries: list[robot_controller.Berry]) -> mujoco.MjModel:
     """The arm, the berries hanging on their stems, and a gutter behind them."""
-    parts = []
-    for i, berry in enumerate(berries):
-        x, y, z = berry.center
-        top = berry.top
-        color = "0.75 0.05 0.05 1" if berry.ripe else "0.75 0.8 0.5 1"
-        parts.append(
-            f'<geom name="berry{i}" type="ellipsoid" pos="{x} {y} {z}" '
-            f'size="{berry.radius} {berry.radius} {1.4 * berry.radius}" rgba="{color}"/>'
-            # The stem is only drawn; the cutter passes through it.
-            f'<geom type="capsule" fromto="{top[0]} {top[1]} {top[2]} {top[0]} {top[1] + 0.08} {top[2] + 0.2}" '
-            f'size="0.0012" rgba="0.2 0.45 0.1 1" contype="0" conaffinity="0"/>'
-        )
+    parts = [_hanging_berry(i, berry) for i, berry in enumerate(berries)]
     gutter_y = max(b.center[1] for b in berries) + 0.12
     xml = f"""
 <mujoco>
-  <option timestep="0.002" gravity="0 0 0"/>
+  <option timestep="0.002"/>
   <visual><global offwidth="640" offheight="640"/></visual>
   <default>
     <default class="arm">
       <joint armature="0.1" damping="5"/>  <!-- motor and gearbox inertia keep the light links stable -->
       <geom contype="1" conaffinity="0"/>  <!-- the arm touches berries, not itself -->
+    </default>
+    <default class="stem">
+      <joint stiffness="{STEM_STIFFNESS}" damping="{STEM_DAMPING}" armature="0.0001"/>
+      <geom contype="0" conaffinity="0" rgba="0.2 0.45 0.1 1"/>  <!-- the cutter passes through stems -->
     </default>
   </default>
   <worldbody>
@@ -153,15 +182,28 @@ def build_scene(berries: list[robot_controller.Berry]) -> mujoco.MjModel:
             xyaxes="1 0 0 0 0 1" fovy="{CAMERA_FOVY}"/>
     <geom type="box" pos="0 {gutter_y} 0.72" size="0.6 0.05 0.04" rgba="0.9 0.9 0.88 1"
           contype="0" conaffinity="0"/>
-    {''.join(parts)}
-    {ARM}
+    {ARM.replace("<body ", '<body gravcomp="1" ')}  <!-- the motors hold the arm up against gravity -->
+    {''.join(parts)}  <!-- after the arm, so the arm's joints come first in qpos -->
+
   </worldbody>
   <actuator>
     {''.join(f'<position joint="j{k}" kp="400" kv="20"/>' for k in range(1, 7))}
   </actuator>
 </mujoco>
 """
-    return mujoco.MjModel.from_xml_string(xml)
+    model = mujoco.MjModel.from_xml_string(xml)
+    _hold_berries_where_seen(model)
+    return model
+
+
+def _hold_berries_where_seen(model: mujoco.MjModel) -> None:
+    """Give each stem joint a rest angle that balances gravity, so the berries hang where the camera saw them."""
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    for joint in range(model.njnt):
+        if model.jnt_stiffness[joint] > 0:  # stem joints only; the arm has motors
+            dof, adr = model.jnt_dofadr[joint], model.jnt_qposadr[joint]
+            model.qpos_spring[adr] = data.qfrc_bias[dof] / model.jnt_stiffness[joint]
 
 
 # ---- 3. moving the cutter ---------------------------------------------------------
@@ -172,7 +214,7 @@ def solve_ik(model, goal: np.ndarray, direction: np.ndarray, q: np.ndarray) -> n
     site = model.site("tip").id
     jacp, jacr = np.zeros((3, model.nv)), np.zeros((3, model.nv))
     data = mujoco.MjData(model)  # a scratch copy, so the simulation keeps its state
-    data.qpos[:] = q
+    data.qpos[:ARM_JOINTS] = q
     for _ in range(100):
         mujoco.mj_kinematics(model, data)
         mujoco.mj_comPos(model, data)
@@ -183,18 +225,19 @@ def solve_ik(model, goal: np.ndarray, direction: np.ndarray, q: np.ndarray) -> n
         if np.linalg.norm(error) < 1e-5:
             break
         mujoco.mj_jacSite(model, data, jacp, jacr, site)
-        jac = np.vstack([jacp, 0.3 * jacr])
-        data.qpos[:] += jac.T @ np.linalg.solve(jac @ jac.T + 1e-4 * np.eye(6), error)
-    return data.qpos.copy()
+        jac = np.vstack([jacp, 0.3 * jacr])[:, :ARM_JOINTS]
+        data.qpos[:ARM_JOINTS] += jac.T @ np.linalg.solve(jac @ jac.T + 1e-4 * np.eye(6), error)
+    return data.qpos[:ARM_JOINTS].copy()
 
 
 class Run:
     """One attempt in the simulator: moves the arm and records what it touched."""
 
-    def __init__(self, model):
+    def __init__(self, model, target: int):
         self.model, self.data = model, mujoco.MjData(model)
+        self.target = target  # index of the berry being picked
         forward = np.array([0.0, 1.0, 0.0])
-        self.data.qpos[:] = self.data.ctrl[:] = solve_ik(model, HOME_TIP, forward, HOME_GUESS)
+        self.data.qpos[:ARM_JOINTS] = self.data.ctrl[:] = solve_ik(model, HOME_TIP, forward, HOME_GUESS)
         mujoco.mj_forward(model, self.data)
         self.tip = self.data.site("tip").xpos.copy()
         self.direction = forward
@@ -231,7 +274,8 @@ class Run:
         self.tip, self.direction = waypoint.position, waypoint.direction
         if waypoint.cut:
             self._step(int(CUT_TIME / self.model.opt.timestep))
-            reached = np.linalg.norm(self.data.site("tip").xpos - waypoint.position)
+            # Judged at the target's stem as it is now: a berry pushed aside takes its cut point with it.
+            reached = np.linalg.norm(self.data.site("tip").xpos - self.data.site(f"cut{self.target}").xpos)
             self.cut = reached < REACH_TOLERANCE
 
 
@@ -253,7 +297,7 @@ def reproduce(line: dict, camera: dict, snapshot_dir: pathlib.Path | None = None
         return {"pick": pick, "berries": len(berries), "outcome": "no_target", "peak_force_n": 0.0, "cycle_s": 0.0}
 
     model = build_scene(berries)
-    run = Run(model)
+    run = Run(model, next(i for i, berry in enumerate(berries) if berry is target))
     if film:
         run.renderer = mujoco.Renderer(model, 480, 640)
     for waypoint in robot_controller.plan(target, berries):
