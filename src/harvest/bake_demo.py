@@ -149,7 +149,8 @@ def describe_failed(line: dict, camera: dict) -> list[dict]:
     result = reproduce_scene.reproduce(line, camera, film=True)
     model, found, target = result["model"], result["found"], result["target"]
     data = mujoco.MjData(model)
-    data.qpos[:] = reproduce_scene.Run(model).data.qpos
+    target_index = next(i for i, berry in enumerate(found) if berry is target)
+    data.qpos[:] = reproduce_scene.Run(model, target_index).data.qpos
     mujoco.mj_forward(model, data)
     with mujoco.Renderer(model, 640, 640) as renderer:
         renderer.update_scene(data, "robot")
