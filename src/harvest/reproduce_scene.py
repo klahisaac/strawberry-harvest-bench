@@ -254,16 +254,18 @@ class Run:
         self.tip = self.data.site("tip").xpos.copy()
         self.direction = forward
         self.peak_force = 0.0  # of the arm on any fruit, the target's included
-        self.renderer, self.frames = None, []  # set renderer to film the attempt
+        self.renderer = None  # set it to film the attempt
+        self.frames = {name: [] for name in VIEWS}  # one film per camera angle
         self.cut = False
 
     def _step(self, steps: int) -> None:
         force = np.zeros(6)
         for _ in range(steps):
             mujoco.mj_step(self.model, self.data)
-            if self.renderer and self.data.time >= len(self.frames) / FILM_FPS:
-                self.renderer.update_scene(self.data, side_view())
-                self.frames.append(self.renderer.render())
+            if self.renderer and self.data.time >= len(self.frames["angled"]) / FILM_FPS:
+                for name, view in VIEWS.items():
+                    self.renderer.update_scene(self.data, view())
+                    self.frames[name].append(self.renderer.render())
             for i in range(self.data.ncon):
                 contact = self.data.contact[i]
                 fruit = [self.model.geom(g).name.startswith("berry") for g in (contact.geom1, contact.geom2)]
@@ -307,8 +309,8 @@ class Run:
 def reproduce(line: dict, camera: dict, snapshot_dir: pathlib.Path | None = None, film: bool = False) -> dict:
     """Rebuild one logged attempt and run the robot controller on it.
 
-    With `film`, the result also holds the attempt's video frames, and the
-    berries the camera found.
+    With `film`, the result also holds the attempt's video frames, one film
+    for each of VIEWS, and the berries the camera found.
     """
     pick = line["pick"]
     rgb = np.asarray(pil_image.open(FIELD / "images" / f"{pick}_rgb.png").convert("RGB"))
@@ -344,12 +346,26 @@ def reproduce(line: dict, camera: dict, snapshot_dir: pathlib.Path | None = None
     return result
 
 
+def _view(lookat: list[float], distance: float, azimuth: float, elevation: float) -> mujoco.MjvCamera:
+    camera = mujoco.MjvCamera()
+    camera.lookat[:] = lookat
+    camera.distance, camera.azimuth, camera.elevation = distance, azimuth, elevation
+    return camera
+
+
 def side_view() -> mujoco.MjvCamera:
     """Beside the arm and a little above it, for pictures and videos."""
-    camera = mujoco.MjvCamera()
-    camera.lookat[:] = [0.0, 0.35, 0.4]
-    camera.distance, camera.azimuth, camera.elevation = 1.2, 150, -20
-    return camera
+    return _view([0.0, 0.35, 0.4], 1.2, 150, -20)
+
+
+# The camera angles each filmed attempt is recorded from. From the angled view the robot's
+# forward axis runs across the picture, so a berry in front of another can look beside it;
+# the side and top views show front and behind plainly.
+VIEWS = {
+    "angled": side_view,
+    "side": lambda: _view([0.0, 0.40, 0.46], 0.55, 180, -5),  # level, square to the cutter's path
+    "top": lambda: _view([0.0, 0.42, 0.45], 0.45, 90, -89),  # looking down, the robot at the bottom
+}
 
 
 def save_snapshot(model, data, path: pathlib.Path) -> None:

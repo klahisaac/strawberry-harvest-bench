@@ -119,7 +119,7 @@
   $("howBefore").innerHTML = how("How this was run and judged", [
     `<b>The robot's code as it was.</b> <code>robot_controller.py</code> picks the ripe berry nearest the camera's line of sight, lines the cutter up 12 cm in front of its stem, and goes straight in.`,
     `<b>The verdict</b> is read from the simulation. The cutter may touch only stems: a strawberry bruises easily, so any touch on a fruit (over ${R.force_limit_n} N, above sensor noise) is a <code>fruit_contact</code>, and the robot stops and backs out, as the real one does. The cutter tip ending more than ${R.reach_mm} mm from the cut point, measured on the stem where it is at that moment, is a miss; otherwise the berry is picked.`,
-    `<b>The video</b> is rendered by MuJoCo's own renderer, 30 frames per simulated second, and encoded with ffmpeg as H.264.`,
+    `<b>The videos</b> are rendered by MuJoCo's own renderer from three cameras in the same run (from an angle, from the side and from above), 30 frames per simulated second, and encoded with ffmpeg as H.264.`,
   ]);
 
   // ---- 4 and 5: the agent, and its fix ---------------------------------------------------------------

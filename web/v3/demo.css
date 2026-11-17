@@ -307,3 +307,12 @@ video { width: 100%; border-radius: 12px; background: #000; box-shadow: var(--sh
 /* The prompt the agent got, word for word. */
 .prompt { margin: 0; padding: 14px 18px; background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius);
   font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-2); }
+
+/* ---- camera angles ---- */
+.angle-main { margin: 0; }
+.angles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0 20px; }
+.angles figure { margin: 0; min-width: 0; }
+@media (max-width: 760px) { .angles { grid-template-columns: 1fr; } }
+.angle-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.angle-pair figure { margin: 0; min-width: 0; }
+.compare .angle-pair figcaption { font-weight: 500; color: var(--muted); font-size: 12px; margin: 4px 0 0; }

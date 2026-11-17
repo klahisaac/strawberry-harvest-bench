@@ -1,6 +1,6 @@
 window.DEMO = {
  "meta": {
-  "generated": "2026-11-16 23:46 UTC",
+  "generated": "2026-11-17 00:23 UTC",
   "versions": {
    "mujoco": "4.0.0",
    "python": "3.12.16",

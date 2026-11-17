@@ -91,8 +91,21 @@
           is. The simulation should end each one the way the field did.</p></div>
     </header>
     <div class="result">
-      <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
+      <figure class="angle-main">
+        <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
+        <figcaption>From an angle, above and beside the arm</figcaption>
+      </figure>
       <div class="verdict-panel" id="beforeVerdict"></div>
+    </div>
+    <div class="angles">
+      <figure>
+        <video src="demo/before-side.mp4" controls muted playsinline loop autoplay></video>
+        <figcaption>From the side, square to the cutter's path: the unripe berry hangs in front of the ripe one</figcaption>
+      </figure>
+      <figure>
+        <video src="demo/before-top.mp4" controls muted playsinline loop autoplay></video>
+        <figcaption>From above, the robot at the bottom: the unripe berry is right on the cutter's line</figcaption>
+      </figure>
     </div>
     <div class="card flush"><table class="data" id="beforeTable"></table></div>
     <div class="how" id="howBefore"></div>
@@ -126,9 +139,17 @@
     <div class="compare">
       <figure><figcaption>Before — current code</figcaption>
         <video src="demo/before.mp4" controls muted playsinline loop autoplay></video>
+        <div class="angle-pair">
+          <figure><video src="demo/before-side.mp4" controls muted playsinline loop autoplay></video><figcaption>Side</figcaption></figure>
+          <figure><video src="demo/before-top.mp4" controls muted playsinline loop autoplay></video><figcaption>Top</figcaption></figure>
+        </div>
         <div class="mini" id="cmpBefore"></div></figure>
       <figure><figcaption>After — the agent's fix</figcaption>
         <video src="demo/after.mp4" controls muted playsinline loop autoplay></video>
+        <div class="angle-pair">
+          <figure><video src="demo/after-side.mp4" controls muted playsinline loop autoplay></video><figcaption>Side</figcaption></figure>
+          <figure><video src="demo/after-top.mp4" controls muted playsinline loop autoplay></video><figcaption>Top</figcaption></figure>
+        </div>
         <div class="mini" id="cmpAfter"></div></figure>
     </div>
   </section>

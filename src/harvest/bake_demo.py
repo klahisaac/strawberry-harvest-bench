@@ -137,7 +137,9 @@ def run_all(lines: list[dict], camera: dict, film_to: pathlib.Path) -> list[dict
         film = line["pick"] == FAILED_PICK
         result = reproduce_scene.reproduce(line, camera, film=film)
         if film:
-            save_video(result.pop("frames"), film_to)
+            for view, frames in result.pop("frames").items():  # before.mp4, before-side.mp4, before-top.mp4
+                name = film_to.stem if view == "angled" else f"{film_to.stem}-{view}"
+                save_video(frames, film_to.with_name(name + film_to.suffix))
             result.pop("model"), result.pop("found"), result.pop("target")
         results.append({**result, "field": line["outcome"]})
         log(f"  {line['pick']}: field {line['outcome']}, simulation {result['outcome']}")
