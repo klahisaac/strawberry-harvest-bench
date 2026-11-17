@@ -35,7 +35,7 @@ import reproduce_scene
 
 ROOT = reproduce_scene.ROOT
 HERE = pathlib.Path(__file__).resolve().parent
-WEB = ROOT / "web" / "v2" / "demo"  # this pipeline is version 2 of the demo
+WEB = ROOT / "web" / "v3" / "demo"  # this pipeline is version 3 of the demo; web/v1 and web/v2 are kept as recorded
 WORK = ROOT / "runs" / "demo" / "work"  # the agent's copy of the code
 ORIGINAL = ROOT / "runs" / "demo" / "original"  # the code as the agent was given it, to diff against
 FAILED_PICK = "p07"
@@ -45,8 +45,8 @@ AGENT_TIMEOUT_S = 30 * 60
 PROMPT = """You are working on the control software of a strawberry-harvesting robot: a 6-axis arm with a cutter.
 
 Field report from harvester-01, gutter row G3:
-  pick {pick} aborted: {outcome}. Peak force on fruit {force} N, over the 5 N limit; the robot stopped
-  the attempt after {cycle} s.
+  pick {pick} aborted: {outcome}. The cutter touched a fruit with {force} N. It may touch only stems,
+  so the robot stopped, backed out and gave up the berry after {cycle} s.
   The robot went for a ripe strawberry. An unripe strawberry hangs in front of it, over the ripe
   one's top, where the stem is cut.
 

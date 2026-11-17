@@ -8,22 +8,24 @@ attempt, and writes the change up as a pull request.
 
 **Demo:** https://harvest.isaacon.dev, a recorded run of every step. The site lists
 every version of the demo: how each was built, what was wrong with it, and what
-the next one improved. This README describes version 2.
+the next one improved. This README describes version 3, the current one.
 
 ## The failure
 
 Harvester-01 makes ten attempts in gutter row G3. Nine are picked. In the
 tenth, p07, an unripe berry hangs 70 mm in front of the ripe target, over its
-top, where the stem is cut. The robot sends its cutter straight in, hits the
-unripe berry with 51.8 N, over its 5 N force limit, and stops:
+top, where the stem is cut. The robot sends its cutter straight in and
+touches the unripe berry. The cutter may touch only stems, since a strawberry
+bruises easily, so the robot stops and backs out:
 
 ```json
-{"pick": "p07", "event": "pick.aborted", "outcome": "collision", "peak_force_n": 51.8, "flags": ["force_limit"], ...}
+{"pick": "p07", "event": "pick.aborted", "outcome": "fruit_contact", "peak_force_n": 0.2, "flags": ["fruit_contact"], ...}
 ```
 
-Earlier versions of this demo logged this outcome as `stem_torn`. It was
-renamed to `collision`: the cutter hits the unripe berry and the robot stops
-at its force limit before reaching the stem.
+Earlier versions had the berries fixed in place, so the same touch was a
+51.8 N `collision` (version 2) or a `stem_torn` (version 1). With soft,
+elastic stems the unripe berry swings aside instead, and the force is what a
+hanging berry really pushes back with.
 
 ## How it works
 
@@ -36,7 +38,7 @@ Blender ──► RGB-D images + YOLO boxes ──► YOLO11n detector
         reproduce_scene.py: YOLO + depth → berries in 3D → MuJoCo scene
                  │            6-axis arm driven by robot_controller.py
                  ▼
-        bake_demo.py: reproduce → agent fixes robot_controller.py → rerun → web/v2/demo/
+        bake_demo.py: reproduce → agent fixes robot_controller.py → rerun → web/v3/demo/
 ```
 
 1. **Data.** Blender (Cycles) renders a greenhouse gutter with strawberry
@@ -47,10 +49,12 @@ Blender ──► RGB-D images + YOLO boxes ──► YOLO11n detector
    each berry and say whether it is ripe.
 3. **Simulation.** For each log line, the YOLO boxes and the depth image give
    each berry's position and size. The berries are placed in MuJoCo in front
-   of a 6-axis arm with a cutter. `robot_controller.py` picks the target and
-   the cutter's waypoints, and the arm follows them with inverse kinematics.
-   More than 5 N on any fruit is a collision; a cutter that ends off the cut
-   point is a miss; otherwise the berry is picked.
+   of a 6-axis arm with a cutter. Each berry hangs from an elastic rod, a
+   MuJoCo 1D flexcomp that bends and twists, so a pushed berry swings aside.
+   `robot_controller.py` picks the target and the cutter's waypoints, and the
+   arm follows them with inverse kinematics. Any touch on a fruit (over
+   0.05 N) is a `fruit_contact`, and the arm backs out; a cutter that ends off
+   the cut point is a miss; otherwise the berry is picked.
 4. **The fix.** A headless Claude Code agent gets the field report, a copy of
    the code and one command that reruns all ten attempts. It may change only
    `robot_controller.py`. When all ten are picked, its explanation and PR text
@@ -58,7 +62,7 @@ Blender ──► RGB-D images + YOLO boxes ──► YOLO11n detector
 
 The simulation must end every attempt the way the field did before the fix
 means anything: with the original controller, nine are picked and p07 is a
-collision.
+fruit contact.
 
 ## Layout
 
@@ -70,9 +74,9 @@ collision.
 | `src/perception/strawberry_perception_trainer.py` | trains the YOLO detector |
 | `src/harvest/robot_controller.py` | the robot's decisions: target and cutter path. The only file the agent edits |
 | `src/harvest/reproduce_scene.py` | rebuilds each attempt in MuJoCo and runs the controller |
-| `src/harvest/bake_demo.py` | runs every step, the agent included, and writes `web/v2/demo/` |
+| `src/harvest/bake_demo.py` | runs every step, the agent included, and writes `web/v3/demo/` |
 | `models/strawberry_yolo.pt` | the trained detector |
-| `web/` | the static demo site: a list of every version, with each version's page in `web/v1/`, `web/v2/` |
+| `web/` | the static demo site: a list of every version, with each version's page in `web/v1/` to `web/v3/` |
 | `scripts/deploy_pages.py` | uploads `web/` to Cloudflare Pages |
 
 ## Running it

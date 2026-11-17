@@ -12,8 +12,8 @@ just before it picks. The pick id ties them together: the line with
 
 The failed attempt, p07, is a ripe berry with an unripe one hanging 70 mm in
 front of it, over the ripe berry's top, where its stem is cut. The robot went
-straight in and its cutter hit the unripe berry: the force on it went over
-the limit and the robot stopped the attempt.
+straight in and its cutter touched the unripe berry. The cutter may touch
+only stems, so the robot stopped and backed out.
 
 Output:
 
@@ -70,17 +70,20 @@ def failed_cluster() -> list[Berry]:
 def log_line(pick: int, when: datetime.datetime, target: Berry, rng: np.random.Generator) -> dict:
     """What the robot reported for one attempt."""
     failed = pick == FAILED_PICK
+    ripeness = round(target.ripeness + rng.uniform(-0.03, 0.03), 2)
+    if not failed:
+        rng.uniform(0.0, 0.8)  # once a force reading; still drawn so later attempts render as they did
     return {
         "robot": "harvester-01",
         "row": "G3",
         "pick": f"p{pick:02d}",
         "event": "pick.aborted" if failed else "pick.completed",
-        "outcome": "collision" if failed else "picked",
-        "est_ripeness": round(target.ripeness + rng.uniform(-0.03, 0.03), 2),
-        # Peak force on berries other than the target; the robot stops above 5 N.
-        "peak_force_n": 51.8 if failed else round(rng.uniform(0.0, 0.8), 1),
-        "cycle_s": 3.3 if failed else round(rng.uniform(4.3, 4.9), 1),
-        "flags": ["force_limit"] if failed else [],
+        "outcome": "fruit_contact" if failed else "picked",
+        "est_ripeness": ripeness,
+        # Peak force of the cutter on any fruit. It may touch only stems: above 0.05 N the robot stops.
+        "peak_force_n": 0.2 if failed else 0.0,
+        "cycle_s": 2.5 if failed else round(rng.uniform(4.3, 4.9), 1),
+        "flags": ["fruit_contact"] if failed else [],
         "abnormal": failed,
         "time": when.isoformat(timespec="seconds"),
     }

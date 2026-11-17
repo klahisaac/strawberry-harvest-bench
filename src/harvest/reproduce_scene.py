@@ -13,6 +13,10 @@ For each line of the field log (data/field/harvest_log.jsonl):
      along its waypoints
   4. judge the attempt the way the field robot did, and compare with the log
 
+The cutter may touch only stems. A strawberry bruises easily, so the robot's
+force sensing stops the attempt the moment the cutter touches any fruit, and
+the arm backs out the way it came.
+
 The camera took the image from a fixed place on the robot, so every attempt
 shares one camera pose: CAMERA_POSITION, looking along +y.
 """
@@ -40,7 +44,8 @@ CAMERA_FOVY = 56.1  # degrees: 640 pixels high at a focal length of 600 pixels
 
 TOOL_SPEED = 0.10  # m/s
 CUT_TIME = 1.0  # seconds the cutter takes to close
-FORCE_LIMIT = 5.0  # N on any fruit: above this the robot stops the attempt
+FORCE_LIMIT = 0.05  # N on any fruit: a touch. The cutter may touch only stems, so the robot stops
+RETREAT = 0.10  # m the cutter backs out along its approach after it touches a fruit
 REACH_TOLERANCE = 0.005  # m between the cutter tip and the cut point
 FILM_FPS = 30
 
@@ -167,7 +172,7 @@ def _hanging_berry(i: int, berry: robot_controller.Berry) -> str:
         f'</flexcomp>'
         f'<body name="fruit{i}" pos="{_vec(berry.top)}"><freejoint/>'
         f'<geom name="berry{i}" type="ellipsoid" pos="{_vec(berry.center - berry.top)}" '
-        f'size="{berry.radius} {berry.radius} {1.4 * berry.radius}" rgba="{color}" contype="0"/>'
+        f'size="{berry.radius} {berry.radius} {1.4 * berry.radius}" rgba="{color}"/>'  # fruit touch fruit, too
         f'</body>'
     )
 
@@ -248,7 +253,7 @@ class Run:
         mujoco.mj_forward(model, self.data)
         self.tip = self.data.site("tip").xpos.copy()
         self.direction = forward
-        self.peak_force = 0.0  # on any berry, the target's fruit included
+        self.peak_force = 0.0  # of the arm on any fruit, the target's included
         self.renderer, self.frames = None, []  # set renderer to film the attempt
         self.cut = False
 
@@ -261,13 +266,20 @@ class Run:
                 self.frames.append(self.renderer.render())
             for i in range(self.data.ncon):
                 contact = self.data.contact[i]
-                names = self.model.geom(contact.geom1).name + self.model.geom(contact.geom2).name
-                if "berry" in names:  # the arm pressing on a fruit
+                fruit = [self.model.geom(g).name.startswith("berry") for g in (contact.geom1, contact.geom2)]
+                if sum(fruit) == 1:  # the arm on a fruit; fruit on fruit is not the robot's touch
                     mujoco.mj_contactForce(self.model, self.data, i, force)
                     self.peak_force = max(self.peak_force, force[0])
 
-    def move(self, waypoint: robot_controller.Waypoint) -> None:
-        """Move the tip in a straight line, at TOOL_SPEED, to the waypoint."""
+    @property
+    def touched(self) -> bool:
+        return self.peak_force > FORCE_LIMIT
+
+    def move(self, waypoint: robot_controller.Waypoint, stop_on_touch: bool = True) -> None:
+        """Move the tip in a straight line, at TOOL_SPEED, to the waypoint.
+
+        The robot stops where it is the moment the cutter touches a fruit.
+        """
         distance = np.linalg.norm(waypoint.position - self.tip)
         n = max(1, int(distance / 0.002))
         q = self.data.ctrl.copy()
@@ -278,6 +290,9 @@ class Run:
             q = solve_ik(self.model, goal, direction / np.linalg.norm(direction), q)
             self.data.ctrl[:] = q
             self._step(int(0.002 / TOOL_SPEED / self.model.opt.timestep))
+            if stop_on_touch and self.touched:
+                self.tip, self.direction = goal, direction / np.linalg.norm(direction)
+                return
         self.tip, self.direction = waypoint.position, waypoint.direction
         if waypoint.cut:
             self._step(int(CUT_TIME / self.model.opt.timestep))
@@ -309,13 +324,14 @@ def reproduce(line: dict, camera: dict, snapshot_dir: pathlib.Path | None = None
         run.renderer = mujoco.Renderer(model, 480, 640)
     for waypoint in robot_controller.plan(target, berries):
         run.move(waypoint)
-        if run.peak_force > FORCE_LIMIT:
-            break  # the robot's force limit: it stops here
+        if run.touched:  # it stopped at the touch; back out the way it came, and give up this berry
+            run.move(robot_controller.Waypoint(run.tip - RETREAT * run.direction, run.direction), stop_on_touch=False)
+            break
     if snapshot_dir:
         save_snapshot(model, run.data, snapshot_dir / f"{pick}.png")
 
-    if run.peak_force > FORCE_LIMIT:
-        outcome = "collision"  # pressed on a berry harder than the force limit
+    if run.touched:
+        outcome = "fruit_contact"  # the cutter touched a fruit, which it must not
     elif not run.cut:
         outcome = "missed"
     else:

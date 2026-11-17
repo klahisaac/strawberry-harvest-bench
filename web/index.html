@@ -60,7 +60,7 @@
       <a class="card" href="v2/">
         <div class="thumb"><img src="v2/demo/sim-view.png" alt="Version 2: the berries in MuJoCo, seen from the robot's camera"></div>
         <div class="body">
-          <div class="head"><span class="version">V2</span><span class="status live">Current</span></div>
+          <div class="head"><span class="version">V2</span><span class="status archived">Archived</span></div>
           <h2>RGB-D images, a YOLO detector and a 6-axis arm</h2>
           <div class="block">
             <h3>How it was built</h3>
@@ -93,37 +93,41 @@
     </li>
 
     <li>
-      <div class="card pending" aria-disabled="true">
+      <a class="card" href="v3/">
         <div class="thumb"><img src="assets/v3-preview.jpg" alt="Version 3: the unripe berry's stem bending as the cutter pushes it aside"></div>
         <div class="body">
-          <div class="head"><span class="version">V3</span><span class="status wip">In progress</span></div>
-          <h2>Soft, elastic stems</h2>
+          <div class="head"><span class="version">V3</span><span class="status live">Current</span></div>
+          <h2>Soft, elastic stems, and a cutter that may touch only stems</h2>
           <div class="block">
             <h3>How it is built</h3>
             <ul>
               <li>Each stem is an elastic rod that bends and twists (MuJoCo's 1D flexcomp), clamped where
                 it hangs from</li>
-              <li>Each fruit is a free body hanging from the end of its stem</li>
+              <li>Each fruit is a free body hanging from the end of its stem, and berries can knock
+                into each other</li>
+              <li>The cutter may touch only stems: any touch on a fruit stops the robot, and it backs
+                out</li>
             </ul>
           </div>
           <div class="block better">
             <h3>Better than V2</h3>
             <ul>
               <li>A pushed berry swings aside and its stem bends, then it swings back</li>
-              <li>Contact forces are realistic: pushing the unripe berry aside takes about 0.15 N,
+              <li>Contact forces are realistic: the cutter's touch on the unripe berry is 0.2 N,
                 not 51.8 N</li>
             </ul>
           </div>
           <div class="block open">
-            <h3>Still open</h3>
+            <h3>What changed in the failure</h3>
             <ul>
-              <li>With stems this soft, going straight in no longer fails: the unripe berry just swings
-                out of the way. The field failure needs a new, realistic cause before V3 can be a demo.</li>
+              <li>With soft stems, going straight in no longer meets a wall: the unripe berry swings out
+                of the way, and the ripe one is still cut. So the failure is now what a picker must avoid
+                anyway: the cutter touching a fruit, which bruises it.</li>
             </ul>
           </div>
-          <span class="cta">Demo not recorded yet</span>
+          <span class="cta">Open the V3 demo →</span>
         </div>
-      </div>
+      </a>
     </li>
 
   </ol>
